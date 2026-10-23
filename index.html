@@ -330,6 +330,7 @@ tailwind.config = { theme: { extend: {
   PL.STATUS = { draft: 'Черновик', open: 'Открыт', closed: 'Закрыт' };
   PL.DEGREE = { I: 'Диплом I степени', II: 'Диплом II степени', III: 'Диплом III степени', participant: 'Сертификат участника' };
   PL.LEVELS = [[0, 'Новичок'], [40, 'Ученик'], [100, 'Решатель'], [200, 'Знаток'], [350, 'Мастер']];
+  PL.ACH_XP = 20;
 
   const log = [];
   async function request(method, path, { body } = {}) {
@@ -356,7 +357,8 @@ tailwind.config = { theme: { extend: {
     participations: { ...crud('/participations'), start: b => request('POST', '/participations', { body: b }), submit: (id, b) => request('POST', `/participations/${id}/submit`, { body: b }), import: b => request('POST', '/participations/import', { body: b }) },
     diplomas: crud('/diplomas'),
     reports: { get: (type, q) => request('GET', `/reports/${type}${qs(q)}`) },
-    me: { progress: () => request('GET', '/me/progress') },
+    me: { progress: () => request('GET', '/me/progress'), telegram: () => request('GET', '/me/telegram'), telegramCode: () => request('POST', '/me/telegram-code', { body: {} }), telegramUnlink: () => request('DELETE', '/me/telegram') },
+    achievements: crud('/achievements'),
     stats: () => request('GET', '/stats')
   };
   PL.ready = Promise.resolve();
@@ -496,14 +498,26 @@ tailwind.config = { theme: { extend: {
   const tabs = (base, list, cur) => `<div class="mt-8 flex gap-1 rounded-xl border border-zinc-800 p-1 text-sm w-fit max-w-full overflow-x-auto">${list.map(([k, t]) => `<a href="#/${base}/${k}" class="rounded-lg px-4 py-2.5 whitespace-nowrap transition ${k === cur ? 'bg-zinc-800 text-white' : 'text-gray-400 hover:text-white'}">${t}</a>`).join('')}</div>`;
   const tile = (v, l) => `<div class="rounded-xl border border-zinc-800 px-4 py-3"><p class="text-2xl font-black">${v}</p><p class="text-xs text-gray-500">${l}</p></div>`;
 
+  const ASTAT = { pending: 'На проверке', verified: 'Подтверждено', rejected: 'Отклонено' };
+  const achPill = s => `<span class="rounded-full border px-2.5 py-0.5 text-xs ${s === 'verified' ? 'border-gold/50 text-gold' : s === 'rejected' ? 'border-red-500/50 text-red-300' : 'border-zinc-700 text-gray-400'}">${ASTAT[s]}</span>`;
+  const achNote = a => (a.description ? `<div class="text-xs text-gray-500">${esc(a.description)}</div>` : '') + (a.adminComment ? `<div class="text-xs text-gold">Комментарий жюри: ${esc(a.adminComment)}</div>` : '');
+  function achievementsView(ach, tg) {
+    const tgBox = `<div class="${box} p-6"><p class="font-medium">Telegram-бот</p><p class="mt-1 text-sm text-gray-400">${tg.linked ? 'Бот подключён: рейтинг, добавление достижений и уведомления о проверке доступны в Telegram.' : 'Подключите бота, чтобы смотреть рейтинг, добавлять достижения и получать уведомления о проверке.'}</p><div id="tg-out" class="mt-4 text-sm"></div><div class="mt-4 flex flex-wrap gap-2">${tg.linked ? `<button data-act="tg-unlink" class="${ghost} !py-2.5 text-sm">Отключить бота</button>` : `<button data-act="tg-code" class="${primary} !py-2.5 text-sm">Получить код подключения</button>`}</div></div>`;
+    const list = table(['Достижение', 'Статус', 'Дата', ''], ach.map(a => row(`<span class="font-medium">${esc(a.title)}</span>${achNote(a)}`, achPill(a.status), fdate(a.createdAt), a.status === 'pending' ? btn('a-del', a.id, 'Удалить') : '')).join(''));
+    return tgBox + `<div class="mt-6 mb-4 flex justify-between items-center gap-3"><p class="text-sm text-gray-400">Подтверждённое жюри достижение даёт +${PL.ACH_XP} XP.</p><button data-act="a-new" class="${primary} !py-2.5 text-sm">+ Добавить достижение</button></div>` + list;
+  }
+
   async function renderCabinet(tab) {
     const my = ++seq;
     const [pr, parts, contests, dips] = await Promise.all([U(api.me.progress()), U(api.participations.list()), U(api.contests.list()), U(api.diplomas.list())]);
     if (my !== seq) return; cacheC = contests;
+    let ach = [], tg = null;
+    if (tab === 'achievements') { [ach, tg] = await Promise.all([U(api.achievements.list()), U(api.me.telegram())]); if (my !== seq) return; }
     const title = id => esc((contests.find(c => c.id === id) || {}).title || '—');
     const pct = pr.nextAt ? Math.round((pr.xp - pr.floor) / (pr.nextAt - pr.floor) * 100) : 100;
     let body;
     if (tab === 'results') body = table(['Конкурс', 'Дата', 'Результат', 'Жюри', ''], parts.map(p => row(title(p.contestId), fdate(p.finishedAt || p.startedAt), p.status === 'finished' ? `${p.score} / ${p.maxScore}` : 'не завершено', p.manualPending ? `${p.manualPending} задач на проверке` : '—', p.diplomaId ? btn('dl', p.diplomaId, 'Скачать диплом') : '')).join(''));
+    else if (tab === 'achievements') body = achievementsView(ach, tg);
     else if (tab === 'diplomas') body = dips.length ? `<div class="grid gap-4 md:grid-cols-3">${dips.map(d => `<div class="${box} p-6"><p class="text-sm text-gold">${PL.DEGREE[d.degree]}</p><p class="mt-3 text-lg font-semibold">${title(d.contestId)}</p><p class="mt-1 text-xs text-gray-500">№ ${d.number} · ${fdate(d.issuedAt)} · ${d.percent}%</p><div class="mt-5">${btn('dl', d.id, 'Скачать (SVG)')}</div></div>`).join('')}</div>` : '<p class="text-gray-500">Дипломы появятся после первого завершённого конкурса.</p>';
     else body = `<div class="grid gap-4 md:grid-cols-3">${contests.map((c, i) => {
       const p = parts.find(x => x.contestId === c.id), off = p || c.status !== 'open';
@@ -512,21 +526,23 @@ tailwind.config = { theme: { extend: {
     }).join('')}</div>`;
     $('cabinet').innerHTML = head('Личный кабинет', 'Прогресс, участия и дипломы. Один конкурс — одна попытка.')
       + `<div class="mt-8 ${box} p-6 sm:p-8 grid gap-6 md:grid-cols-[1fr_auto] items-center"><div><p class="text-sm text-gold">Уровень ${pr.level} · ${pr.levelName}</p><p class="mt-2 text-4xl font-black">${pr.xp} <span class="text-xl text-zinc-600">XP</span></p><div class="mt-4 h-2 rounded-full bg-zinc-800 overflow-hidden" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="h-full bg-gold transition-all" style="width:${pct}%"></div></div><p class="mt-2 text-xs text-gray-500">${pr.nextAt ? `До уровня «${pr.nextName}» — ${pr.nextAt - pr.xp} XP` : 'Достигнут максимальный уровень'}</p></div><div class="grid grid-cols-3 gap-3 text-center">${tile(pr.finished + '/' + pr.totalContests, 'конкурсов')}${tile(pr.diplomas, 'дипломов')}${tile(pr.bestPercent + '%', 'лучший результат')}</div></div>`
-      + tabs('cabinet', [['contests', 'Конкурсы'], ['results', 'Мои участия'], ['diplomas', 'Дипломы']], tab) + `<div class="mt-8">${body}</div>`;
+      + tabs('cabinet', [['contests', 'Конкурсы'], ['results', 'Мои участия'], ['diplomas', 'Дипломы'], ['achievements', 'Достижения']], tab) + `<div class="mt-8">${body}</div>`;
   }
 
   /* ---------- Админ-панель ---------- */
   async function renderAdmin(tab) {
     const my = ++seq;
     const [st, contests] = await Promise.all([U(api.stats()), U(api.contests.list())]); if (my !== seq) return; cacheC = contests;
+    const ach = tab === 'achievements' ? await U(api.achievements.list()) : []; if (my !== seq) return;
     const cOpts = contests.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join('');
     let body;
     if (tab === 'import') body = `<div class="grid gap-4 lg:grid-cols-2"><div class="${box} p-6 space-y-4"><label class="block text-sm text-gray-400">Конкурс<select id="i-contest" class="${field}">${cOpts}</select></label><p class="text-xs text-gray-500">Формат CSV с заголовком: <span class="text-gray-300">email;fullName;school;score</span>. score — число верных ответов среди автопроверяемых задач. Новые ученики создаются автоматически.</p><input id="i-file" type="file" accept=".csv,.txt" class="block w-full text-xs text-gray-400 file:mr-3 file:rounded-lg file:border file:border-zinc-800 file:bg-black file:px-3 file:py-2 file:text-gray-300"><textarea id="i-text" rows="8" spellcheck="false" placeholder="Вставьте CSV или выберите файл" class="${field} font-mono text-xs"></textarea><div class="flex flex-wrap gap-2"><button data-act="i-sample" class="${ghost} !py-2.5 text-sm">Вставить пример</button><button data-act="i-check" class="${ghost} !py-2.5 text-sm">Проверить</button><button id="i-run" data-act="i-run" disabled class="${primary} !py-2.5 text-sm">Импортировать</button></div></div><div id="i-out" class="${box} p-6 text-sm text-gray-400">Здесь появится результат проверки файла.</div></div>`;
+    else if (tab === 'achievements') body = table(['Ученик', 'Достижение', 'Статус', 'Дата', ''], ach.map(a => row(`<span class="font-medium">${esc(a.fullName)}</span><div class="text-xs text-gray-500">${esc(a.email)}</div>`, `${esc(a.title)}${achNote(a)}`, achPill(a.status), fdate(a.createdAt), `<div class="flex flex-wrap justify-end gap-1.5">${a.status !== 'verified' ? btn('a-ok', a.id, 'Подтвердить') : ''}${a.status !== 'rejected' ? btn('a-no', a.id, 'Отклонить') : ''}${btn('a-rm', a.id, 'Удалить')}</div>`)).join(''));
     else if (tab === 'reports') body = `<div class="${box} p-6 grid gap-4 sm:grid-cols-3 items-end"><label class="block text-sm text-gray-400">Отчёт<select id="r-type" class="${field}"><option value="participations">Участия</option><option value="summary">Сводка по конкурсам</option><option value="users">Пользователи</option></select></label><label class="block text-sm text-gray-400">Конкурс<select id="r-contest" class="${field}"><option value="">Все конкурсы</option>${cOpts}</select></label><div class="flex gap-2"><button data-act="r-show" class="${ghost} !py-3 text-sm">Показать</button><button data-act="r-dl" class="${primary} !py-3 text-sm">Скачать CSV</button></div></div><div id="r-out" class="mt-6"></div>`;
     else body = `<div class="mb-4 flex justify-end"><button data-act="c-new" class="${primary} !py-2.5 text-sm">+ Новый конкурс</button></div>` + table(['Конкурс', 'Статус', 'Участий', ''], contests.map(c => row(`<span class="font-medium">${esc(c.title)}</span><div class="text-xs text-gray-500">${PL.TRACK[c.track]} · ${c.grade} класс · ${c.taskCount} задач · ${dur(c.durationMin)}</div>`, pill(c.status), c.participants, `<div class="flex flex-wrap justify-end gap-1.5">${btn('c-toggle', c.id, c.status === 'open' ? 'Закрыть' : 'Открыть')}${btn('c-edit', c.id, 'Изменить')}${btn('c-del', c.id, 'Удалить')}</div>`)).join(''));
     $('admin').innerHTML = head('Админ-панель', 'Конкурсы, загрузка списков участников и отчёты.')
       + `<div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">${tile(st.students, 'учеников')}${tile(st.contests, 'конкурсов')}${tile(st.participations, 'участий')}${tile(st.diplomas, 'дипломов')}</div>`
-      + tabs('admin', [['contests', 'Конкурсы'], ['import', 'Импорт участников'], ['reports', 'Отчёты']], tab) + `<div class="mt-8">${body}</div>`;
+      + tabs('admin', [['contests', 'Конкурсы'], ['import', 'Импорт участников'], ['achievements', 'Достижения'], ['reports', 'Отчёты']], tab) + `<div class="mt-8">${body}</div>`;
   }
 
   function contestForm(c) {
@@ -567,6 +583,18 @@ tailwind.config = { theme: { extend: {
     'i-sample': () => { $('i-text').value = SAMPLE; $('i-run').disabled = true; },
     'i-check': () => runImport(true),
     'i-run': () => runImport(false),
+    'a-new': () => openDlg('Новое достижение', `<label class="block text-sm text-gray-400">Название<input name="title" required minlength="3" maxlength="120" placeholder="Призёр городской олимпиады по физике" class="${field}"></label><label class="block text-sm text-gray-400">Описание (необязательно)<textarea name="description" rows="3" maxlength="500" class="${field}"></textarea></label>`,
+      async fd => { await U(api.achievements.create(Object.fromEntries(fd))); closeDlg(); toast('Отправлено на проверку'); renderCabinet('achievements'); }),
+    'a-del': async a => { if (!confirm('Удалить достижение?')) return; await U(api.achievements.remove(a.dataset.id)); renderCabinet('achievements'); },
+    'a-ok': async a => { await U(api.achievements.update(a.dataset.id, { status: 'verified' })); toast('Подтверждено. Ученик получит уведомление в Telegram'); renderAdmin('achievements'); },
+    'a-no': a => openDlg('Отклонить достижение', `<label class="block text-sm text-gray-400">Комментарий для ученика<textarea name="adminComment" rows="3" maxlength="300" class="${field}"></textarea></label>`,
+      async fd => { await U(api.achievements.update(a.dataset.id, { status: 'rejected', adminComment: fd.get('adminComment') })); closeDlg(); renderAdmin('achievements'); }),
+    'a-rm': async a => { if (!confirm('Удалить запись?')) return; await U(api.achievements.remove(a.dataset.id)); renderAdmin('achievements'); },
+    'tg-code': async () => {
+      const r = await U(api.me.telegramCode()), url = r.botUsername ? `https://t.me/${r.botUsername}?start=${r.code}` : '';
+      $('tg-out').innerHTML = `<p>Код подключения: <b class="text-2xl tracking-widest text-gold">${r.code}</b> <span class="text-gray-500">(действует ${r.expiresInMin} мин)</span></p>` + (url ? `<p class="mt-2"><a class="underline text-gold" target="_blank" rel="noopener" href="${url}">Открыть бота в Telegram</a></p>` : '') + '<p class="mt-2 text-gray-500">Или отправьте этот код боту сообщением.</p>';
+    },
+    'tg-unlink': async () => { await U(api.me.telegramUnlink()); toast('Бот отключён'); renderCabinet('achievements'); },
     'r-show': a => report(a), 'r-dl': a => report(a)
   };
   async function report(a) {

@@ -16,6 +16,8 @@ PL.ROLE = { student: 'Ученик', admin: 'Администратор' };
 PL.STATUS = { draft: 'Черновик', open: 'Открыт', closed: 'Закрыт' };
 PL.DEGREE = { I: 'Диплом I степени', II: 'Диплом II степени', III: 'Диплом III степени', participant: 'Сертификат участника' };
 PL.LEVELS = [[0, 'Новичок'], [40, 'Ученик'], [100, 'Решатель'], [200, 'Знаток'], [350, 'Мастер']];
+PL.ACH_XP = 20; // XP за подтверждённое достижение (то же число в bot/bot.py и во VIEW ratings)
+const BOT_USERNAME = (process.env.TELEGRAM_BOT_USERNAME || '').replace(/^@/, '');
 
 /* ---------- База данных ---------- */
 const DB_URL = process.env.DATABASE_URL;
@@ -304,12 +306,63 @@ route('GET', '/diplomas/:id', async ({ me, p }) => {
 });
 route('DELETE', '/diplomas/:id', async ({ me, p }) => { need(me, 'admin'); await pool.query('DELETE FROM diplomas WHERE id=$1', [p.id]); return null; });
 
+// достижения: ученик добавляет -> администратор подтверждает/отклоняет -> бот присылает уведомление
+route('GET', '/achievements', async ({ me, q }) => {
+  need(me);
+  return (await all(pool, `SELECT a.*, u.full_name, u.email FROM achievements a JOIN users u ON u.id=a.user_id
+    WHERE ($1::boolean OR a.user_id=$2) AND ($3::text = '' OR a.status=$3) ORDER BY (a.status='pending') DESC, a.created_at DESC`,
+    [me.role === 'admin', me.id, q.status || ''])).map(out);
+});
+route('POST', '/achievements', async ({ me, body }) => {
+  need(me, 'student');
+  const title = String(body.title || '').trim(), description = String(body.description || '').trim();
+  if (title.length < 3 || title.length > 120) throw E(422, 'Название: от 3 до 120 символов.');
+  if (description.length > 500) throw E(422, 'Описание: не длиннее 500 символов.');
+  const { n } = await one(pool, "SELECT count(*)::int AS n FROM achievements WHERE user_id=$1 AND status='pending'", [me.id]);
+  if (n >= 10) throw E(429, 'Слишком много достижений на проверке (максимум 10). Дождитесь решения жюри.');
+  const id = uid('ach');
+  await pool.query("INSERT INTO achievements (id,user_id,title,description,source) VALUES ($1,$2,$3,$4,'site')", [id, me.id, title, description || null]);
+  return out(await one(pool, 'SELECT * FROM achievements WHERE id=$1', [id]));
+});
+route('PATCH', '/achievements/:id', async ({ me, p, body }) => { // верификация (notified=false -> бот отправит уведомление)
+  need(me, 'admin');
+  if (!['verified', 'rejected'].includes(body.status)) throw E(422, 'status: verified или rejected');
+  const comment = String(body.adminComment || '').trim().slice(0, 300);
+  const r = await one(pool, 'UPDATE achievements SET status=$2, admin_comment=$3, verified_at=now(), notified=false WHERE id=$1 RETURNING *', [p.id, body.status, comment || null]);
+  if (!r) throw E(404, 'Достижение не найдено'); return out(r);
+});
+route('DELETE', '/achievements/:id', async ({ me, p }) => {
+  need(me);
+  const r = await pool.query("DELETE FROM achievements WHERE id=$1 AND ($2::boolean OR (user_id=$3 AND status='pending'))", [p.id, me.role === 'admin', me.id]);
+  if (!r.rowCount) throw E(404, 'Запись не найдена или её уже нельзя удалить'); return null;
+});
+
+// привязка Telegram: код из кабинета вводится в боте
+route('GET', '/me/telegram', async ({ me }) => {
+  need(me, 'student');
+  return { linked: !!await one(pool, 'SELECT 1 FROM telegram_links WHERE user_id=$1', [me.id]), botUsername: BOT_USERNAME || null };
+});
+route('POST', '/me/telegram-code', async ({ me }) => {
+  need(me, 'student');
+  await pool.query('DELETE FROM telegram_codes WHERE user_id=$1 OR expires_at < now()', [me.id]);
+  for (let i = 0; i < 5; i++) {
+    const code = String(crypto.randomInt(100000, 1000000));
+    try {
+      await pool.query("INSERT INTO telegram_codes (code,user_id,expires_at) VALUES ($1,$2, now() + interval '15 minutes')", [code, me.id]);
+      return { code, expiresInMin: 15, botUsername: BOT_USERNAME || null };
+    } catch (e) { if (e.code !== '23505') throw e; }
+  }
+  throw E(500, 'Не удалось создать код. Попробуйте ещё раз.');
+});
+route('DELETE', '/me/telegram', async ({ me }) => { need(me, 'student'); await pool.query('DELETE FROM telegram_links WHERE user_id=$1', [me.id]); return null; });
+
 // прогресс ученика: XP, уровни
 route('GET', '/me/progress', async ({ me }) => {
   need(me, 'student');
   const ps = (await all(pool, "SELECT * FROM participations WHERE user_id=$1 AND status='finished'", [me.id])).map(out), ds = (await all(pool, 'SELECT * FROM diplomas WHERE user_id=$1', [me.id])).map(out);
   const bonus = { I: 50, II: 30, III: 15, participant: 0 };
-  const xp = ps.reduce((s, p) => s + p.score * 10 + 20, 0) + ds.reduce((s, d) => s + bonus[d.degree], 0);
+  const av = (await one(pool, "SELECT count(*)::int AS n FROM achievements WHERE user_id=$1 AND status='verified'", [me.id])).n;
+  const xp = ps.reduce((s, p) => s + p.score * 10 + 20, 0) + ds.reduce((s, d) => s + bonus[d.degree], 0) + av * PL.ACH_XP;
   let lv = 0; PL.LEVELS.forEach(([t], i) => { if (xp >= t) lv = i; }); const nx = PL.LEVELS[lv + 1];
   const { n } = await one(pool, "SELECT count(*)::int AS n FROM contests WHERE status='open'");
   return { xp, level: lv + 1, levelName: PL.LEVELS[lv][1], floor: PL.LEVELS[lv][0], nextAt: nx ? nx[0] : null, nextName: nx ? nx[1] : null,
