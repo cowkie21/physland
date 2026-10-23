@@ -358,7 +358,7 @@ tailwind.config = { theme: { extend: {
     diplomas: crud('/diplomas'),
     reports: { get: (type, q) => request('GET', `/reports/${type}${qs(q)}`) },
     me: { progress: () => request('GET', '/me/progress'), telegram: () => request('GET', '/me/telegram'), telegramCode: () => request('POST', '/me/telegram-code', { body: {} }), telegramUnlink: () => request('DELETE', '/me/telegram') },
-    achievements: crud('/achievements'),
+    achievements: { ...crud('/achievements'), available: () => request('GET', '/achievements/available') },
     stats: () => request('GET', '/stats')
   };
   PL.ready = Promise.resolve();
@@ -583,8 +583,12 @@ tailwind.config = { theme: { extend: {
     'i-sample': () => { $('i-text').value = SAMPLE; $('i-run').disabled = true; },
     'i-check': () => runImport(true),
     'i-run': () => runImport(false),
-    'a-new': () => openDlg('Новое достижение', `<label class="block text-sm text-gray-400">Название<input name="title" required minlength="3" maxlength="120" placeholder="Призёр городской олимпиады по физике" class="${field}"></label><label class="block text-sm text-gray-400">Описание (необязательно)<textarea name="description" rows="3" maxlength="500" class="${field}"></textarea></label>`,
-      async fd => { await U(api.achievements.create(Object.fromEntries(fd))); closeDlg(); toast('Отправлено на проверку'); renderCabinet('achievements'); }),
+    'a-new': async () => {
+      const list = await U(api.achievements.available());
+      if (!list.length) return toast('Нет завершённых конкурсов, которые ещё можно добавить.', true);
+      openDlg('Добавить достижение', `<label class="block text-sm text-gray-400">Выберите достижение из пройденных конкурсов<select name="participationId" class="${field}">${list.map(x => `<option value="${x.id}">${esc(x.label)} · ${x.score}/${x.maxScore}</option>`).join('')}</select></label>`,
+        async fd => { await U(api.achievements.create(Object.fromEntries(fd))); closeDlg(); toast('Отправлено на проверку'); renderCabinet('achievements'); });
+    },
     'a-del': async a => { if (!confirm('Удалить достижение?')) return; await U(api.achievements.remove(a.dataset.id)); renderCabinet('achievements'); },
     'a-ok': async a => { await U(api.achievements.update(a.dataset.id, { status: 'verified' })); toast('Подтверждено. Ученик получит уведомление в Telegram'); renderAdmin('achievements'); },
     'a-no': a => openDlg('Отклонить достижение', `<label class="block text-sm text-gray-400">Комментарий для ученика<textarea name="adminComment" rows="3" maxlength="300" class="${field}"></textarea></label>`,

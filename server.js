@@ -313,15 +313,26 @@ route('GET', '/achievements', async ({ me, q }) => {
     WHERE ($1::boolean OR a.user_id=$2) AND ($3::text = '' OR a.status=$3) ORDER BY (a.status='pending') DESC, a.created_at DESC`,
     [me.role === 'admin', me.id, q.status || ''])).map(out);
 });
+// достижение выбирается из завершённых конкурсов ученика (диплом / сертификат), свободный текст не принимается
+const achBase = `SELECT p.id, p.score, p.max_score, c.title AS contest, d.degree, d.percent FROM participations p
+  JOIN contests c ON c.id=p.contest_id LEFT JOIN diplomas d ON d.participation_id=p.id`;
+const achTitle = r => r.degree ? `${PL.DEGREE[r.degree]} — ${r.contest}` : `Участие: ${r.contest}`;
+const achDesc = r => `Результат: ${r.score} из ${r.max_score}` + (r.percent != null ? ` (${r.percent}%)` : '');
+route('GET', '/achievements/available', async ({ me }) => {
+  need(me, 'student');
+  return (await all(pool, achBase + ` WHERE p.user_id=$1 AND p.status='finished'
+    AND NOT EXISTS (SELECT 1 FROM achievements a WHERE a.participation_id=p.id) ORDER BY p.finished_at DESC`, [me.id]))
+    .map(r => ({ id: r.id, label: achTitle(r), score: r.score, maxScore: r.max_score }));
+});
 route('POST', '/achievements', async ({ me, body }) => {
   need(me, 'student');
-  const title = String(body.title || '').trim(), description = String(body.description || '').trim();
-  if (title.length < 3 || title.length > 120) throw E(422, 'Название: от 3 до 120 символов.');
-  if (description.length > 500) throw E(422, 'Описание: не длиннее 500 символов.');
+  const r = await one(pool, achBase + " WHERE p.id=$1 AND p.user_id=$2 AND p.status='finished'", [String(body.participationId || ''), me.id]);
+  if (!r) throw E(404, 'Выберите достижение из списка завершённых конкурсов.');
+  if (await one(pool, 'SELECT 1 FROM achievements WHERE participation_id=$1', [r.id])) throw E(409, 'Это достижение уже добавлено.');
   const { n } = await one(pool, "SELECT count(*)::int AS n FROM achievements WHERE user_id=$1 AND status='pending'", [me.id]);
   if (n >= 10) throw E(429, 'Слишком много достижений на проверке (максимум 10). Дождитесь решения жюри.');
   const id = uid('ach');
-  await pool.query("INSERT INTO achievements (id,user_id,title,description,source) VALUES ($1,$2,$3,$4,'site')", [id, me.id, title, description || null]);
+  await pool.query("INSERT INTO achievements (id,user_id,title,description,participation_id,source) VALUES ($1,$2,$3,$4,$5,'site')", [id, me.id, achTitle(r), achDesc(r), r.id]);
   return out(await one(pool, 'SELECT * FROM achievements WHERE id=$1', [id]));
 });
 route('PATCH', '/achievements/:id', async ({ me, p, body }) => { // верификация (notified=false -> бот отправит уведомление)

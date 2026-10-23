@@ -2,7 +2,7 @@
 
 Что умеет:
   1. 🏆 Мой рейтинг            — XP, уровень, место среди учеников, топ-5.
-  2. ➕ Добавить достижение    — отправляет достижение жюри на проверку.
+  2. ➕ Добавить достижение    — выбор из пройденных конкурсов, отправка жюри на проверку.
   3. 🔔 Уведомление о верификации — как только администратор подтвердил/отклонил достижение на сайте,
                                    бот присылает сообщение.
 
@@ -21,6 +21,7 @@ import ssl
 import time
 
 import asyncpg
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -29,7 +30,7 @@ from aiogram.filters import Command, CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, Message, ReplyKeyboardMarkup
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
@@ -52,11 +53,6 @@ router.message.filter(F.chat.type == "private")
 pool: asyncpg.Pool
 log = logging.getLogger("physland-bot")
 esc = lambda s: html.escape(str(s or ""))
-
-
-class AddAch(StatesGroup):
-    title = State()
-    description = State()
 
 
 # ───────────────────────── вспомогательное ─────────────────────────
@@ -189,6 +185,23 @@ async def show_rating(m: Message, state: FSMContext):
 
 
 # ───────────────────────── 2. добавление достижения ─────────────────────────
+DEGREE = {"I": "Диплом I степени", "II": "Диплом II степени", "III": "Диплом III степени", "participant": "Сертификат участника"}
+BASE_SQL = ("SELECT p.id, p.score, p.max_score, c.title AS contest, d.degree, d.percent FROM participations p "
+            "JOIN contests c ON c.id = p.contest_id LEFT JOIN diplomas d ON d.participation_id = p.id ")
+
+
+def ach_title(r) -> str:
+    return f"{DEGREE[r['degree']]} — {r['contest']}" if r["degree"] else f"Участие: {r['contest']}"
+
+
+def ach_desc(r) -> str:
+    return f"Результат: {r['score']} из {r['max_score']}" + (f" ({r['percent']}%)" if r["percent"] is not None else "")
+
+
+async def pending_count(user_id: str) -> int:
+    return await pool.fetchval("SELECT count(*) FROM achievements WHERE user_id = $1 AND status = 'pending'", user_id)
+
+
 @router.message(Command("add"), StateFilter("*"))
 @router.message(F.text == BTN_ADD, StateFilter("*"))
 async def add_start(m: Message, state: FSMContext):
@@ -198,44 +211,37 @@ async def add_start(m: Message, state: FSMContext):
         return await m.answer(NOT_LINKED)
     if u["role"] != "student":
         return await m.answer("Добавлять достижения могут только ученики.")
-    pending = await pool.fetchval("SELECT count(*) FROM achievements WHERE user_id = $1 AND status = 'pending'", u["id"])
+    pending = await pending_count(u["id"])
     if pending >= MAX_PENDING:
         return await m.answer(f"На проверке уже {pending} достижений (максимум {MAX_PENDING}). Дождитесь решения жюри.")
-    await state.set_state(AddAch.title)
-    await m.answer("Напишите <b>название</b> достижения (3–120 символов), например: "
-                   "<i>Призёр городской олимпиады по физике</i>.\n\nОтмена — /cancel")
+    rows = await pool.fetch(BASE_SQL + "WHERE p.user_id = $1 AND p.status = 'finished' "
+                            "AND NOT EXISTS (SELECT 1 FROM achievements a WHERE a.participation_id = p.id) "
+                            "ORDER BY p.finished_at DESC LIMIT 10", u["id"])
+    if not rows:
+        return await m.answer("Нет завершённых конкурсов, которые ещё можно добавить. Пройдите конкурс на сайте — и он появится здесь.")
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
+        text=f"{ach_title(r)} · {r['score']}/{r['max_score']}"[:60], callback_data="ach:" + r["id"])] for r in rows])
+    await m.answer("Выберите достижение, которое отправить жюри на проверку:", reply_markup=kb)
 
 
-@router.message(AddAch.title, F.text)
-async def add_title(m: Message, state: FSMContext):
-    title = m.text.strip()
-    if not 3 <= len(title) <= 120:
-        return await m.answer("Название должно быть от 3 до 120 символов. Попробуйте ещё раз.")
-    await state.update_data(title=title)
-    await state.set_state(AddAch.description)
-    await m.answer("Добавьте <b>описание</b> (до 500 символов: где, когда, какой результат) или отправьте «-», чтобы пропустить.")
-
-
-@router.message(AddAch.description, F.text)
-async def add_description(m: Message, state: FSMContext):
-    desc = m.text.strip()
-    if len(desc) > 500:
-        return await m.answer("Описание длиннее 500 символов. Сократите и отправьте ещё раз.")
-    data = await state.get_data()
-    await state.clear()
-    u = await get_user(m.chat.id)
+@router.callback_query(F.data.startswith("ach:"))
+async def add_pick(cb: CallbackQuery):
+    u = await get_user(cb.from_user.id)
     if not u:
-        return await m.answer(NOT_LINKED)
-    await pool.execute(
-        "INSERT INTO achievements (id, user_id, title, description, source) VALUES ($1, $2, $3, $4, 'telegram')",
-        "ach_" + secrets.token_hex(5), u["id"], data["title"], None if desc in ("-", "—", "") else desc)
-    await m.answer(f"📨 Достижение «{esc(data['title'])}» отправлено на проверку.\n"
-                   "Как только жюри примет решение, я пришлю уведомление.", reply_markup=MENU)
-
-
-@router.message(StateFilter(AddAch.title, AddAch.description))
-async def add_not_text(m: Message):
-    await m.answer("Пожалуйста, отправьте текст. Отмена — /cancel")
+        return await cb.answer("Аккаунт не привязан", show_alert=True)
+    r = await pool.fetchrow(BASE_SQL + "WHERE p.id = $1 AND p.user_id = $2 AND p.status = 'finished'", cb.data[4:], u["id"])
+    if not r:
+        return await cb.answer("Недоступно", show_alert=True)
+    if await pending_count(u["id"]) >= MAX_PENDING:
+        return await cb.answer(f"На проверке уже {MAX_PENDING} достижений", show_alert=True)
+    try:
+        await pool.execute(
+            "INSERT INTO achievements (id, user_id, title, description, participation_id, source) VALUES ($1, $2, $3, $4, $5, 'telegram')",
+            "ach_" + secrets.token_hex(5), u["id"], ach_title(r), ach_desc(r), r["id"])
+    except asyncpg.UniqueViolationError:
+        return await cb.answer("Это достижение уже добавлено", show_alert=True)
+    await cb.answer("Отправлено на проверку")
+    await cb.message.edit_text(f"📨 «{esc(ach_title(r))}» отправлено на проверку.\nКак только жюри примет решение, я пришлю уведомление.")
 
 
 @router.message(Command("my"), StateFilter("*"))
@@ -309,11 +315,21 @@ async def main():
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
     task = asyncio.create_task(notifier(bot))
+    runner = None
+    if os.environ.get("PORT"):  # на Render (Web Service) нужен открытый порт; сайт для проверки «жив ли бот»
+        app = web.Application()
+        app.router.add_get("/", lambda r: web.Response(text="ok"))
+        app.router.add_get("/healthz", lambda r: web.Response(text="ok"))
+        runner = web.AppRunner(app)
+        await runner.setup()
+        await web.TCPSite(runner, "0.0.0.0", int(os.environ["PORT"])).start()
     try:
         log.info("Бот запущен: @%s", (await bot.get_me()).username)
         await dp.start_polling(bot)
     finally:
         task.cancel()
+        if runner:
+            await runner.cleanup()
         await pool.close()
         await bot.session.close()
 

@@ -100,3 +100,7 @@ SELECT u.id AS user_id, u.full_name,
   + COALESCE((SELECT SUM(CASE d.degree WHEN 'I' THEN 50 WHEN 'II' THEN 30 WHEN 'III' THEN 15 ELSE 0 END) FROM diplomas d WHERE d.user_id = u.id), 0)
   + 20 * (SELECT count(*) FROM achievements a WHERE a.user_id = u.id AND a.status = 'verified') AS xp
 FROM users u WHERE u.role = 'student' AND u.status = 'active';
+
+-- достижение = завершённое участие в конкурсе (выбирается из списка, один раз)
+ALTER TABLE achievements ADD COLUMN IF NOT EXISTS participation_id text REFERENCES participations(id) ON DELETE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ach_participation ON achievements(participation_id) WHERE participation_id IS NOT NULL;
