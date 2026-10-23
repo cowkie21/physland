@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Решись! — конкурсная платформа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  fontFamily: { sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'] },
+  colors: { gold: '#ecdca0', ink: '#09090b' }
+}}}
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background:#000; }
+  :focus-visible { outline: 2px solid #ecdca0; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+</style>
+</head>
+<body class="font-sans text-white antialiased">
+
+<!-- Header -->
+<header class="sticky top-0 z-30 bg-black/90 backdrop-blur border-b border-zinc-900">
+  <div class="max-w-6xl mx-auto px-5 h-20 flex items-center justify-between">
+    <a href="#top" data-home aria-label="PhysLand — на главную" class="flex items-center gap-2">
+      <svg viewBox="0 0 200 200" class="h-14 w-14" fill="none" stroke="#ecdca0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M78 34C72 22 60 26 68 37C73 43 82 41 90 39L122 39C130 41 139 43 143 36C148 24 135 21 131 34"/>
+        <path d="M82 39C77 58 84 80 108 82C132 80 140 58 133 39"/>
+        <circle cx="96" cy="54" r="5"/><circle cx="122" cy="54" r="6"/>
+        <path d="M108 58L112 70L117 58"/>
+        <path d="M86 78C62 100 66 126 100 114C128 104 152 98 150 116"/>
+        <path d="M84 80C70 104 62 140 40 190"/>
+        <path d="M62 150C96 124 150 108 168 124C172 108 188 106 184 126"/>
+      </svg>
+      <span class="text-xl sm:text-2xl font-extrabold tracking-tight">PhysLand</span>
+    </a>
+    <div class="flex items-center gap-3">
+      <span id="role-badge" class="hidden rounded-full border border-gold/50 px-3 py-1 text-xs text-gold"></span>
+      <a href="#/cabinet" data-open="account" aria-label="Личный кабинет" class="h-11 w-11 grid place-items-center rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>
+      </a>
+      <button id="burger" aria-label="Меню" aria-expanded="false" aria-controls="menu" class="h-11 w-11 grid place-items-center rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 9h16M4 15h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="menu" class="hidden border-t border-zinc-900 bg-black">
+    <div id="menu-links" class="max-w-6xl mx-auto px-5 py-4 flex flex-col sm:flex-row gap-1 sm:gap-8 text-zinc-300"></div>
+  </nav>
+</header>
+
+<div id="site">
+<main id="top">
+
+<!-- Hero -->
+<section class="relative isolate max-w-6xl mx-auto px-5 pt-20 pb-24 sm:pt-32 sm:pb-36 text-center">
+  <svg aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 h-full w-full text-gold opacity-[.17]" viewBox="0 0 1200 640" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2">
+    <g transform="translate(600 320)"><ellipse rx="560" ry="150"/><ellipse rx="560" ry="150" transform="rotate(60)"/><ellipse rx="560" ry="150" transform="rotate(120)"/><circle r="7"/></g>
+    <circle cx="1160" cy="320" r="8"/><circle cx="40" cy="320" r="8"/>
+    <path d="M0 585c37-24 113-24 150 0s113 24 150 0 113-24 150 0 113 24 150 0 113-24 150 0 113 24 150 0 113-24 150 0 113 24 150 0"/>
+  </svg>
+  <p class="text-sm text-gold tracking-wide">физика • математика • информатика</p>
+  <h1 class="mt-6 font-black tracking-tight leading-[0.95] text-[clamp(3.25rem,13vw,9.5rem)]">ГОТОВЬСЯ!</h1>
+  <p class="mt-8 mx-auto max-w-xl text-lg sm:text-xl text-gray-400 leading-relaxed">
+    Участвуй в интерактивных конкурсах и турнирах по физике, математике и информатике: решай задачи, соревнуйся с другими и поднимайся в рейтинге.
+  </p>
+  <a id="join" href="#cabinet" data-open="register" class="mt-10 inline-block rounded-2xl bg-white text-black font-medium px-8 py-4 text-base hover:bg-gold hover:-translate-y-0.5 transition duration-200">Зарегистрироваться</a>
+</section>
+
+<!-- Для кого -->
+<section id="audience" class="max-w-6xl mx-auto px-5 py-20 border-t border-zinc-900">
+  <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Для кого</h2>
+  <p class="mt-4 max-w-lg text-gray-400">Конкурс открыт для всех, кто любит решать задачи.</p>
+  <div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <article class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-8 w-8 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.700 2 6.500 5.500M16 5a3.500 3.500 0 010 7M18 14.800c2 .6 3.200 2.400 3.500 5.200"/></svg>
+      <h3 class="mt-5 text-lg font-semibold">Участники</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">Все, кто хочет проверить силы в честном соревновании.</p>
+    </article>
+    <article class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-8 w-8 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.500A1.500 1.500 0 015.500 4H11v15H5.500A1.500 1.500 0 004 20.500zM20 5.500A1.500 1.500 0 0018.500 4H13v15h5.500a1.500 1.500 0 011.500 1.500z"/></svg>
+      <h3 class="mt-5 text-lg font-semibold">Школьники</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">Задачи сверх школьной программы и подготовка к олимпиадам.</p>
+    </article>
+    <article class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-8 w-8 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5zM6 11.500V16c0 1.500 2.700 3 6 3s6-1.500 6-3v-4.500M22 9v6"/></svg>
+      <h3 class="mt-5 text-lg font-semibold">Студенты</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">Возможность закрепить базу и проявить себя на задачах высокого уровня.</p>
+    </article>
+    <article class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-8 w-8 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l5-5M14 4c-4 0-7 3-8 7l7 7c4-1 7-4 7-8 0-3-2-6-6-6z"/><circle cx="15" cy="9" r="1.500"/></svg>
+      <h3 class="mt-5 text-lg font-semibold">Начинающие специалисты</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">Тренировка мышления и первые заметные результаты в профессии.</p>
+    </article>
+  </div>
+</section>
+
+<!-- Направления -->
+<section id="tracks" class="max-w-6xl mx-auto px-5 py-20 border-t border-zinc-900">
+  <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Направления</h2>
+  <div class="mt-12 grid gap-4 md:grid-cols-3">
+    <a href="#cabinet" data-open="register" class="group rounded-2xl border border-zinc-800 bg-ink p-8 min-h-[220px] flex flex-col justify-between hover:border-zinc-600 transition">
+      <div class="flex items-start justify-between"><span class="text-6xl sm:text-7xl font-black text-zinc-700 group-hover:text-gold transition">01</span><svg viewBox="0 0 64 64" class="h-16 w-16 text-zinc-700 group-hover:text-gold transition" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><ellipse cx="32" cy="32" rx="27" ry="10"/><ellipse cx="32" cy="32" rx="27" ry="10" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="27" ry="10" transform="rotate(120 32 32)"/><circle cx="32" cy="32" r="3"/></svg></div>
+      <span class="mt-10 text-2xl font-bold">Физика</span>
+    </a>
+    <a href="#cabinet" data-open="register" class="group rounded-2xl border border-zinc-800 bg-ink p-8 min-h-[220px] flex flex-col justify-between hover:border-zinc-600 transition">
+      <div class="flex items-start justify-between"><span class="text-6xl sm:text-7xl font-black text-zinc-700 group-hover:text-gold transition">02</span><svg viewBox="0 0 64 64" class="h-16 w-16 text-zinc-700 group-hover:text-gold transition" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><path d="M8 56V10l48 46z"/><path d="M8 46h10v10"/></svg></div>
+      <span class="mt-10 text-2xl font-bold">Математика</span>
+    </a>
+    <a href="#cabinet" data-open="register" class="group rounded-2xl border border-zinc-800 bg-ink p-8 min-h-[220px] flex flex-col justify-between hover:border-zinc-600 transition">
+      <div class="flex items-start justify-between"><span class="text-6xl sm:text-7xl font-black text-zinc-700 group-hover:text-gold transition">03</span><svg viewBox="0 0 64 64" class="h-16 w-16 text-zinc-700 group-hover:text-gold transition" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><rect x="6" y="10" width="52" height="38" rx="5"/><path d="M24 58h16M32 48v10"/><path d="M22 21l-7 8 7 8M42 21l7 8-7 8M35 19l-6 20"/></svg></div>
+      <span class="mt-10 text-2xl font-bold">Информатика</span>
+    </a>
+  </div>
+</section>
+
+<!-- Таймлайн -->
+<section id="steps" class="max-w-6xl mx-auto px-5 py-20 border-t border-zinc-900">
+  <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Как принять участие</h2>
+  <ol class="relative mt-14 ml-3 sm:ml-5 border-l border-zinc-800 space-y-10">
+    <li class="relative pl-8 sm:pl-12">
+      <span class="absolute -left-[7px] top-8 h-3.5 w-3.5 rounded-full bg-gold ring-4 ring-black"></span>
+      <div class="relative rounded-2xl border border-zinc-800 bg-ink p-6 sm:p-8 max-w-2xl"><svg viewBox="0 0 24 24" class="absolute right-6 top-6 h-10 w-10 text-zinc-700" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21c1-4 4-6 7-6M18 8v6M15 11h6"/></svg>
+        <p class="text-sm text-gold">ШАГ 1 • Регистрация</p>
+        <p class="mt-3 text-gray-300 leading-relaxed">Создайте профиль и выберите направление. Регистрация открыта всегда.</p>
+        <p class="mt-4 text-sm text-gray-500">Без сроков и дедлайнов</p>
+      </div>
+    </li>
+    <li class="relative pl-8 sm:pl-12">
+      <span class="absolute -left-[7px] top-8 h-3.5 w-3.5 rounded-full bg-gold ring-4 ring-black"></span>
+      <div class="relative rounded-2xl border border-zinc-800 bg-ink p-6 sm:p-8 max-w-2xl"><svg viewBox="0 0 24 24" class="absolute right-6 top-6 h-10 w-10 text-zinc-700" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/></svg>
+        <p class="text-sm text-gold">ШАГ 2 • Решение конкурсных задач</p>
+        <p class="mt-3 text-gray-300 leading-relaxed">Любой конкурс можно решить в любое время: решайте задачи онлайн и отправляйте ответы в личном кабинете.</p>
+        <p class="mt-4 text-sm text-gray-500">Все конкурсы доступны постоянно</p>
+      </div>
+    </li>
+    <li class="relative pl-8 sm:pl-12">
+      <span class="absolute -left-[7px] top-8 h-3.5 w-3.5 rounded-full bg-gold ring-4 ring-black"></span>
+      <div class="relative rounded-2xl border border-zinc-800 bg-ink p-6 sm:p-8 max-w-2xl"><svg viewBox="0 0 24 24" class="absolute right-6 top-6 h-10 w-10 text-zinc-700" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3" aria-hidden="true"><path d="M7 4h10v5a5 5 0 01-10 0zM7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3M12 14v4M8 20h8"/></svg>
+        <p class="text-sm text-gold">ШАГ 3 • Подведение итогов и награждение</p>
+        <p class="mt-3 text-gray-300 leading-relaxed">Работы проверяются, рейтинг обновляется, а победители получают награды.</p>
+        <p class="mt-4 text-sm text-gray-500">Рейтинг обновляется после проверки каждой работы</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- Информация -->
+<section id="rules" class="max-w-6xl mx-auto px-5 py-20 border-t border-zinc-900">
+  <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Важно знать</h2>
+  <div class="mt-12 grid gap-4 md:grid-cols-3">
+    <div class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-7 w-7 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <h3 class="mt-4 font-semibold text-lg">Правила участия</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">Каждый решает самостоятельно. Один аккаунт на участника. Использование чужих решений ведёт к дисквалификации.</p>
+    </div>
+    <div class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-7 w-7 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>
+      <h3 class="mt-4 font-semibold text-lg">Расчёт баллов</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">За каждую задачу начисляются баллы по её сложности. Частично верные решения получают часть баллов.</p>
+    </div>
+    <div class="rounded-2xl border border-zinc-800 bg-ink p-6">
+      <svg class="h-7 w-7 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/></svg>
+      <h3 class="mt-4 font-semibold text-lg">Определение победителей</h3>
+      <p class="mt-2 text-sm text-gray-400 leading-relaxed">Побеждают участники с наибольшей суммой баллов. При равенстве выше окажется тот, кто решил задачи быстрее.</p>
+    </div>
+  </div>
+  <div class="mt-16 text-center">
+    <a href="#cabinet" data-open="register" class="inline-block rounded-2xl bg-white text-black font-medium px-8 py-4 hover:bg-gold hover:-translate-y-0.5 transition duration-200">Зарегистрироваться</a>
+  </div>
+</section>
+
+</main>
+
+<footer class="border-t border-zinc-900 pt-8 pb-10 text-center text-sm text-gray-500">
+  <svg aria-hidden="true" viewBox="0 0 1200 40" preserveAspectRatio="none" class="mx-auto mb-8 h-8 w-full max-w-6xl px-5 text-gold opacity-30" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M0 20c37-24 113-24 150 0s113 24 150 0 113-24 150 0 113 24 150 0 113-24 150 0 113 24 150 0 113-24 150 0 113 24 150 0"/></svg>
+  © Решись!
+</footer>
+</div>
+
+
+<!-- Личный кабинет ученика и админ-панель (рендерятся из js/app.js) -->
+<section id="cabinet" class="hidden max-w-6xl mx-auto px-5 py-16 sm:py-24"></section>
+<section id="admin" class="hidden max-w-6xl mx-auto px-5 py-16 sm:py-24"></section>
+
+<!-- Вход и регистрация -->
+<div id="auth" class="hidden fixed inset-0 z-40 bg-black/80 backdrop-blur-sm grid place-items-center p-5" role="dialog" aria-modal="true" aria-labelledby="a-title">
+  <div class="w-full max-w-md rounded-2xl border border-zinc-800 bg-ink p-8">
+    <div class="flex items-start justify-between gap-4">
+      <h3 id="a-title" class="text-3xl font-extrabold">Регистрация</h3>
+      <button id="a-close" type="button" aria-label="Закрыть" class="h-10 w-10 shrink-0 grid place-items-center rounded-xl border border-zinc-800 text-gray-400 hover:border-zinc-600 hover:text-white transition">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="mt-6 grid grid-cols-2 gap-1 rounded-xl border border-zinc-800 p-1 text-sm">
+      <button type="button" data-tab="register" class="rounded-lg py-2.5 transition">Регистрация</button>
+      <button type="button" data-tab="login" class="rounded-lg py-2.5 transition">Вход</button>
+    </div>
+    <form id="a-form" class="mt-6 space-y-4" novalidate>
+      <label id="a-name-wrap" class="block text-sm text-gray-400">ФИО (для диплома)
+        <input id="a-name" type="text" autocomplete="name" placeholder="Иван Иванов" class="mt-2 w-full rounded-xl bg-black border border-zinc-800 px-4 py-3 text-white placeholder-zinc-600 focus:border-gold focus:outline-none">
+      </label>
+      <label class="block text-sm text-gray-400">Email
+        <input id="a-email" type="email" autocomplete="email" placeholder="name@example.com" class="mt-2 w-full rounded-xl bg-black border border-zinc-800 px-4 py-3 text-white placeholder-zinc-600 focus:border-gold focus:outline-none">
+      </label>
+      <label class="block text-sm text-gray-400">Пароль
+        <input id="a-pass" type="password" placeholder="Не короче 8 символов" class="mt-2 w-full rounded-xl bg-black border border-zinc-800 px-4 py-3 text-white placeholder-zinc-600 focus:border-gold focus:outline-none">
+      </label>
+      <label id="a-pass2-wrap" class="block text-sm text-gray-400">Повторите пароль
+        <input id="a-pass2" type="password" autocomplete="new-password" class="mt-2 w-full rounded-xl bg-black border border-zinc-800 px-4 py-3 text-white placeholder-zinc-600 focus:border-gold focus:outline-none">
+      </label>
+      <p id="a-error" class="hidden text-sm text-red-400" role="alert"></p>
+      <button id="a-submit" type="submit" class="w-full rounded-2xl bg-white text-black font-medium py-3.5 hover:bg-gold transition">Зарегистрироваться</button>
+    </form>
+  </div>
+</div>
+
+<!-- Универсальный диалог и уведомления -->
+<div id="dlg" class="hidden fixed inset-0 z-[65] bg-black/80 backdrop-blur-sm grid place-items-center p-5" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+  <div class="w-full max-w-lg max-h-full overflow-y-auto rounded-2xl border border-zinc-800 bg-ink p-8">
+    <h3 id="dlg-title" class="text-2xl font-extrabold"></h3>
+    <form id="dlg-form" class="mt-6 space-y-4"></form>
+  </div>
+</div>
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
+
+<!-- Описание конкурса -->
+<div id="modal" class="hidden fixed inset-0 z-40 bg-black/80 backdrop-blur-sm grid place-items-center p-5" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="w-full max-w-lg rounded-2xl border border-zinc-800 bg-ink p-8">
+    <span id="m-num" class="text-5xl font-black text-zinc-700"></span>
+    <h3 id="m-title" class="mt-4 text-3xl font-extrabold"></h3>
+    <p id="m-desc" class="mt-4 text-gray-400 leading-relaxed"></p>
+    <ul id="m-rules" class="mt-6 space-y-2 text-sm text-gray-300"></ul>
+    <div class="mt-8 flex gap-3">
+      <button id="m-start" class="flex-1 rounded-2xl bg-white text-black font-medium py-3.5 hover:bg-gold transition">Начать</button>
+      <button id="m-close" class="rounded-2xl border border-zinc-800 px-6 py-3.5 text-gray-300 hover:border-zinc-600 transition">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- Олимпиада -->
+<div id="olymp" class="hidden fixed inset-0 z-50 bg-black overflow-y-auto">
+  <div class="sticky top-0 z-10 bg-black/95 backdrop-blur border-b border-zinc-900">
+    <div class="max-w-3xl mx-auto px-5 h-20 flex items-center justify-between gap-4">
+      <div class="min-w-0"><p id="o-title" class="font-semibold truncate"></p><p id="o-sub" class="text-xs text-gray-500"></p></div>
+      <div id="timer" class="font-black text-2xl sm:text-3xl tabular-nums text-gold" role="timer">02:00:00</div>
+      <button id="o-finish" class="rounded-2xl bg-white text-black font-medium px-5 py-2.5 hover:bg-gold transition">Завершить</button>
+    </div>
+  </div>
+  <div id="o-list" class="max-w-3xl mx-auto px-5 py-10 space-y-4"></div>
+</div>
+
+<!-- Подтверждение сдачи -->
+<div id="confirm" class="hidden fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm grid place-items-center p-5" role="dialog" aria-modal="true" aria-labelledby="c-title">
+  <div class="w-full max-w-sm rounded-2xl border border-zinc-800 bg-ink p-8">
+    <h3 id="c-title" class="text-2xl font-extrabold">Завершить олимпиаду?</h3>
+    <p class="mt-3 text-gray-400 leading-relaxed">После сдачи ответы изменить нельзя.</p>
+    <div class="mt-8 flex gap-3">
+      <button id="c-yes" class="flex-1 rounded-2xl bg-white text-black font-medium py-3.5 hover:bg-gold transition">Сдать работу</button>
+      <button id="c-no" class="rounded-2xl border border-zinc-800 px-6 py-3.5 text-gray-300 hover:border-zinc-600 transition">Назад</button>
+    </div>
+  </div>
+</div>
+
+<!-- Результаты -->
+<div id="result" class="hidden fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm grid place-items-center p-5" role="dialog" aria-modal="true" aria-labelledby="r-title">
+  <div class="w-full max-w-md rounded-2xl border border-zinc-800 bg-ink p-8 text-center">
+    <p id="r-reason" class="text-sm text-gold"></p>
+    <h3 id="r-title" class="mt-3 text-3xl font-extrabold">Результаты</h3>
+    <p class="mt-6 text-6xl font-black"><span id="r-count"></span><span id="r-total" class="text-zinc-700"> / 10</span></p>
+    <p class="mt-2 text-gray-400">правильных ответов</p>
+    <div class="mt-6 rounded-2xl border border-zinc-800 p-4 text-sm text-gray-300 space-y-1">
+      <p>Предварительный статус: <b id="r-status" class="text-white"></b></p>
+      <p id="r-time" class="text-gray-500"></p>
+    </div>
+    <p id="r-diploma" class="mt-4 text-sm text-gold"></p>
+    <p id="r-note" class="mt-2 text-xs text-gray-500"></p>
+    <button id="r-exit" class="mt-8 w-full rounded-2xl bg-white text-black font-medium py-3.5 hover:bg-gold transition">Выход в меню</button>
+  </div>
+</div>
+
+<script>
+/* CSV: разбор (автоопределение ; или ,) и выгрузка (; + BOM — корректно открывается в Excel с кириллицей). */
+(function (PL) {
+  'use strict';
+  // Защита от CSV-инъекций: ячейки, начинающиеся с = + - @, экранируются апострофом.
+  const cell = v => {
+    let s = String(v ?? '');
+    if (/^[=+\-@\t\r]/.test(s) && isNaN(s)) s = "'" + s;
+    return /[";\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  PL.csv = {
+    stringify: (cols, rows) => '\uFEFF' + [cols, ...rows].map(r => r.map(cell).join(';')).join('\r\n'),
+    parse(text) {
+      text = text.replace(/^\uFEFF/, '').trim();
+      if (!text) return [];
+      const head = text.split(/\r?\n/)[0];
+      const d = (head.match(/;/g) || []).length ? ';' : ',';
+      const rows = []; let row = [], f = '', q = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+        else if (c === '"') q = true;
+        else if (c === d) { row.push(f); f = ''; }
+        else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); f = ''; rows.push(row); row = []; }
+        else f += c;
+      }
+      row.push(f); rows.push(row);
+      const keys = rows.shift().map(s => s.trim());
+      return rows.filter(r => r.some(x => x.trim())).map(r => Object.fromEntries(keys.map((k, i) => [k, (r[i] || '').trim()])));
+    }
+  };
+})(window.PL = window.PL || {});
+
+</script>
+<script>
+/* PhysLand: клиент API. Все запросы идут на сервер (/api/...), данные хранятся в PostgreSQL.
+ * UI общается ТОЛЬКО через PL.api.* → request(method, path, {body}) → {ok, status, data | error}. */
+(function (PL) {
+  'use strict';
+  PL.TRACK = { phys: 'Физика', math: 'Математика', info: 'Информатика' };
+  PL.ROLE = { student: 'Ученик', admin: 'Администратор' };
+  PL.STATUS = { draft: 'Черновик', open: 'Открыт', closed: 'Закрыт' };
+  PL.DEGREE = { I: 'Диплом I степени', II: 'Диплом II степени', III: 'Диплом III степени', participant: 'Сертификат участника' };
+  PL.LEVELS = [[0, 'Новичок'], [40, 'Ученик'], [100, 'Решатель'], [200, 'Знаток'], [350, 'Мастер']];
+
+  const log = [];
+  async function request(method, path, { body } = {}) {
+    let res;
+    try {
+      const r = await fetch('/api' + path, {
+        method, credentials: 'same-origin',
+        headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+        body: body !== undefined ? JSON.stringify(body) : undefined
+      });
+      res = await r.json();
+    } catch (e) { res = { ok: false, status: 0, error: 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.' }; }
+    log.push(`${method} ${path} → ${res.status}`); if (log.length > 40) log.shift();
+    return res;
+  }
+  const qs = o => { const s = new URLSearchParams(Object.entries(o || {}).filter(e => e[1] !== '' && e[1] != null)).toString(); return s ? '?' + s : ''; };
+  const crud = base => ({ list: q => request('GET', base + qs(q)), get: id => request('GET', `${base}/${id}`), create: b => request('POST', base, { body: b }), update: (id, b) => request('PATCH', `${base}/${id}`, { body: b }), remove: (id, q) => request('DELETE', `${base}/${id}${qs(q)}`) });
+
+  PL.api = {
+    request, log, setTransport: () => { },
+    auth: { register: b => request('POST', '/auth/register', { body: b }), login: b => request('POST', '/auth/login', { body: b }), logout: () => request('POST', '/auth/logout', { body: {} }), me: () => request('GET', '/auth/me') },
+    users: crud('/users'),
+    contests: { ...crud('/contests'), tasks: id => request('GET', `/contests/${id}/tasks`) },
+    participations: { ...crud('/participations'), start: b => request('POST', '/participations', { body: b }), submit: (id, b) => request('POST', `/participations/${id}/submit`, { body: b }), import: b => request('POST', '/participations/import', { body: b }) },
+    diplomas: crud('/diplomas'),
+    reports: { get: (type, q) => request('GET', `/reports/${type}${qs(q)}`) },
+    me: { progress: () => request('GET', '/me/progress') },
+    stats: () => request('GET', '/stats')
+  };
+  PL.ready = Promise.resolve();
+  PL.resetDemo = () => location.reload();
+})(window.PL = window.PL || {});
+</script>
+<script>
+/* PhysLand UI. Слой представления: данные только через PL.api, прав здесь нет (проверяет API),
+ * навигация и маршруты зависят от роли пользователя. */
+(function (PL) {
+  'use strict';
+  const $ = id => document.getElementById(id), api = PL.api;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const NOTE = '<div class="rounded-2xl border border-zinc-800 p-5 text-sm text-gray-400 leading-relaxed">Формулы вводите в строку: <span class="text-gray-200">sqrt(…)</span> или √, степень <span class="text-gray-200">^</span>, <span class="text-gray-200">pi</span>, tg, arccos; греческие буквы можно писать как mu, alpha, rho. В задачах на доказательство кратко опишите решение или ответ — такие задачи проверит жюри.</div>';/*END*/
+  const fmt = s => [s / 3600, s % 3600 / 60, s % 60].map(v => String(Math.floor(v)).padStart(2, '0')).join(':');
+  const fdate = iso => iso ? new Date(iso).toLocaleDateString('ru-RU') : '—';
+  const dur = m => m % 60 ? m + ' мин' : m / 60 + ' ч';
+  const opts = (o, sel) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${v}</option>`).join('');
+  const btn = (a, id, t) => `<button data-act="${a}" data-id="${id}" class="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-gray-300 hover:border-zinc-600 hover:text-white transition">${t}</button>`;
+  const box = 'rounded-2xl border border-zinc-800 bg-ink';
+  const field = 'mt-2 w-full rounded-xl bg-black border border-zinc-800 px-4 py-3 text-white placeholder-zinc-600 focus:border-gold focus:outline-none';
+  const primary = 'rounded-2xl bg-white text-black font-medium px-6 py-3 hover:bg-gold transition disabled:opacity-40 disabled:hover:bg-white';
+  const ghost = 'rounded-2xl border border-zinc-800 px-6 py-3 text-gray-300 hover:border-zinc-600 transition';
+  const row = (...c) => `<tr class="border-t border-zinc-800 align-top">${c.map(x => `<td class="py-3 pr-4">${x}</td>`).join('')}</tr>`;
+  const table = (h, r) => r ? `<div class="overflow-x-auto ${box} p-4"><table class="w-full text-sm text-left"><thead class="text-xs text-gray-500"><tr>${h.map(x => `<th class="py-2 pr-4 font-normal">${x}</th>`).join('')}</tr></thead><tbody>${r}</tbody></table></div>` : '<p class="text-gray-500">Пока ничего нет.</p>';
+  const pill = s => `<span class="rounded-full border px-2.5 py-0.5 text-xs ${s === 'open' ? 'border-gold/50 text-gold' : 'border-zinc-700 text-gray-400'}">${PL.STATUS[s]}</span>`;
+
+  let user = null, seq = 0, cacheC = [];
+  function toast(t, bad) {
+    const e = $('toast'); e.textContent = t;
+    e.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] max-w-[90vw] rounded-xl border px-5 py-3 text-sm bg-ink ' + (bad ? 'border-red-500/60 text-red-300' : 'border-gold/60 text-gold');
+    clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.add('hidden'), 3500);
+  }
+  // Разворачивает ответ API; при ошибке показывает toast и прерывает сценарий.
+  async function U(p) { const r = await p; if (!r.ok) { toast(r.error, true); throw Object.assign(new Error(r.error), { handled: true }); } return r.data; }
+  window.addEventListener('unhandledrejection', e => { if (e.reason && e.reason.handled) e.preventDefault(); });
+  function download(name, content, mime) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type: mime })); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /* ---------- Навигация по ролям и маршрутизация ---------- */
+  const NAV = {
+    guest: [['#audience', 'Для кого'], ['#tracks', 'Направления'], ['#steps', 'Как участвовать'], ['#rules', 'Правила']],
+    student: [['#/', 'Главная'], ['#/cabinet', 'Личный кабинет']],
+    admin: [['#/', 'Главная'], ['#/admin', 'Админ-панель']]
+  };
+  const ROUTE_ROLE = { cabinet: 'student', admin: 'admin' }; // защищённые маршруты и требуемая роль
+  const burger = $('burger'), menu = $('menu');
+  const closeMenu = () => { menu.classList.add('hidden'); burger.setAttribute('aria-expanded', false); };
+  burger.addEventListener('click', () => burger.setAttribute('aria-expanded', menu.classList.toggle('hidden') === false));
+  const go = h => location.hash === h ? route() : (location.hash = h);
+  const home = () => user.role === 'admin' ? '#/admin' : '#/cabinet';
+
+  function renderNav() {
+    const links = NAV[user ? user.role : 'guest'].map(([h, t]) => `<a class="py-2 hover:text-white" href="${h}">${t}</a>`).join('');
+    $('menu-links').innerHTML = links + (user ? '<button data-act="logout" class="py-2 text-left hover:text-white">Выйти</button>' : '<a class="py-2 text-gold hover:text-white" href="#/cabinet" data-open="login">Войти</a>');
+    const b = $('role-badge'); b.classList.toggle('hidden', !user); b.textContent = user ? PL.ROLE[user.role] : '';
+  }
+  function route() {
+    const h = location.hash, [view, tab] = h.startsWith('#/') ? h.slice(2).split('/') : ['', ''];
+    if (ROUTE_ROLE[view]) {
+      if (!user) { go('#/'); return openAuth('login'); }
+      if (user.role !== ROUTE_ROLE[view]) { toast('Раздел недоступен для вашей роли', true); return go(home()); }
+    }
+    ['site', 'cabinet', 'admin'].forEach(id => $(id).classList.toggle('hidden', id !== (ROUTE_ROLE[view] ? view : 'site')));
+    if (view === 'cabinet') renderCabinet(tab || 'contests');
+    else if (view === 'admin') renderAdmin(tab || 'contests');
+    const anchor = !view && h.length > 1 && $(h.slice(1));
+    anchor ? anchor.scrollIntoView() : window.scrollTo(0, 0);
+    closeMenu();
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ---------- Вход / регистрация ---------- */
+  let mode = 'register';
+  function setMode(m) {
+    mode = m; const reg = m === 'register';
+    $('a-title').textContent = reg ? 'Регистрация' : 'Вход'; $('a-submit').textContent = reg ? 'Зарегистрироваться' : 'Войти';
+    $('a-pass2-wrap').classList.toggle('hidden', !reg); $('a-name-wrap').classList.toggle('hidden', !reg);
+    document.querySelectorAll('[data-tab]').forEach(b => { const on = b.dataset.tab === m; b.classList.toggle('bg-zinc-800', on); b.classList.toggle('text-white', on); b.classList.toggle('text-gray-400', !on); });
+    $('a-error').classList.add('hidden');
+  }
+  function openAuth(m) { closeMenu(); setMode(m || 'register'); $('auth').classList.remove('hidden'); $('a-email').focus(); }
+  const closeAuth = () => $('auth').classList.add('hidden');
+  const authError = t => { $('a-error').textContent = t; $('a-error').classList.remove('hidden'); };
+  document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.tab)));
+  $('a-close').addEventListener('click', closeAuth);
+  $('auth').addEventListener('click', e => { if (e.target === $('auth')) closeAuth(); });
+  $('a-form').addEventListener('submit', async e => {
+    e.preventDefault(); const reg = mode === 'register';
+    const body = { email: $('a-email').value, password: $('a-pass').value, fullName: $('a-name').value };
+    if (reg && body.password !== $('a-pass2').value) return authError('Пароли не совпадают.');
+    const r = await (reg ? api.auth.register(body) : api.auth.login(body));
+    if (!r.ok) return authError(r.error);
+    user = r.data; $('a-form').reset(); closeAuth(); renderNav(); go(home());
+  });
+
+  /* ---------- Диплом (SVG для скачивания) ---------- */
+  function diplomaSvg({ diploma: d, user: u, contest: c }) {
+    const t = (y, sz, fill, txt, w = 600) => `<text x="600" y="${y}" fill="${fill}" font-size="${sz}" font-weight="${w}">${esc(txt)}</text>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" font-family="Inter,Arial,sans-serif" text-anchor="middle"><rect width="1200" height="850" fill="#09090b"/><rect x="30" y="30" width="1140" height="790" fill="none" stroke="#ecdca0" stroke-width="3"/><rect x="48" y="48" width="1104" height="754" fill="none" stroke="#ecdca0" stroke-opacity=".35"/><g fill="none" stroke="#ecdca0" stroke-opacity=".12"><ellipse cx="600" cy="425" rx="480" ry="140"/><ellipse cx="600" cy="425" rx="480" ry="140" transform="rotate(60 600 425)"/><ellipse cx="600" cy="425" rx="480" ry="140" transform="rotate(120 600 425)"/></g>`
+      + t(150, 30, '#ecdca0', 'P H Y S L A N D') + t(280, 64, '#ffffff', PL.DEGREE[d.degree].toUpperCase(), 800) + t(350, 24, '#a1a1aa', 'награждается', 400)
+      + t(450, 54, '#ecdca0', u.fullName, 700) + t(525, 24, '#d4d4d8', `за участие в конкурсе «${c.title}»`, 400) + t(575, 24, '#d4d4d8', `Результат: ${d.percent}%`, 400)
+      + t(740, 20, '#71717a', `№ ${d.number} · ${fdate(d.issuedAt)}`, 400) + '</svg>';
+  }
+
+
+  /* PDF без библиотек: SVG -> canvas -> JPEG -> одностраничный PDF (A4 альбомный) */
+  async function diplomaPdfBlob(svg) {
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+    await new Promise((ok, no) => { img.onload = ok; img.onerror = () => no(new Error('Не удалось отрисовать диплом')); img.src = url; });
+    const W = 2400, H = 1700, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const cx = cv.getContext('2d'); cx.fillStyle = '#09090b'; cx.fillRect(0, 0, W, H); cx.drawImage(img, 0, 0, W, H);
+    URL.revokeObjectURL(url);
+    const bin = atob(cv.toDataURL('image/jpeg', 0.95).split(',')[1]), jpg = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) jpg[i] = bin.charCodeAt(i);
+    const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
+    const add = d => { const b = typeof d === 'string' ? enc.encode(d) : d; parts.push(b); len += b.length; };
+    const obj = (n, body) => { offs[n] = len; add(`${n} 0 obj\n`); add(body); add('\nendobj\n'); };
+    const PW = 841.89, PH = 595.28, content = `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+    add('%PDF-1.4\n');
+    obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+    obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+    obj(4, `<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+    offs[5] = len; add(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`); add(jpg); add('\nendstream\nendobj\n');
+    const xr = len; add('xref\n0 6\n0000000000 65535 f \n');
+    for (let i = 1; i <= 5; i++) add(String(offs[i]).padStart(10, '0') + ' 00000 n \n');
+    add(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`);
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+
+  /* ---------- Личный кабинет ученика ---------- */
+  const head = (title, sub) => `<div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">${title}</h2><div class="flex items-center gap-3 text-sm"><span class="text-gray-400 truncate max-w-[16rem]">${esc(user.fullName)} · ${PL.ROLE[user.role]}</span><button data-act="logout" class="rounded-xl border border-zinc-800 px-4 py-2 text-gray-300 hover:border-zinc-600 hover:text-white transition">Выйти</button></div></div><p class="mt-4 max-w-lg text-gray-400">${sub}</p>`;
+  const tabs = (base, list, cur) => `<div class="mt-8 flex gap-1 rounded-xl border border-zinc-800 p-1 text-sm w-fit max-w-full overflow-x-auto">${list.map(([k, t]) => `<a href="#/${base}/${k}" class="rounded-lg px-4 py-2.5 whitespace-nowrap transition ${k === cur ? 'bg-zinc-800 text-white' : 'text-gray-400 hover:text-white'}">${t}</a>`).join('')}</div>`;
+  const tile = (v, l) => `<div class="rounded-xl border border-zinc-800 px-4 py-3"><p class="text-2xl font-black">${v}</p><p class="text-xs text-gray-500">${l}</p></div>`;
+
+  async function renderCabinet(tab) {
+    const my = ++seq;
+    const [pr, parts, contests, dips] = await Promise.all([U(api.me.progress()), U(api.participations.list()), U(api.contests.list()), U(api.diplomas.list())]);
+    if (my !== seq) return; cacheC = contests;
+    const title = id => esc((contests.find(c => c.id === id) || {}).title || '—');
+    const pct = pr.nextAt ? Math.round((pr.xp - pr.floor) / (pr.nextAt - pr.floor) * 100) : 100;
+    let body;
+    if (tab === 'results') body = table(['Конкурс', 'Дата', 'Результат', 'Жюри', ''], parts.map(p => row(title(p.contestId), fdate(p.finishedAt || p.startedAt), p.status === 'finished' ? `${p.score} / ${p.maxScore}` : 'не завершено', p.manualPending ? `${p.manualPending} задач на проверке` : '—', p.diplomaId ? btn('dl', p.diplomaId, 'Скачать диплом') : '')).join(''));
+    else if (tab === 'diplomas') body = dips.length ? `<div class="grid gap-4 md:grid-cols-3">${dips.map(d => `<div class="${box} p-6"><p class="text-sm text-gold">${PL.DEGREE[d.degree]}</p><p class="mt-3 text-lg font-semibold">${title(d.contestId)}</p><p class="mt-1 text-xs text-gray-500">№ ${d.number} · ${fdate(d.issuedAt)} · ${d.percent}%</p><div class="mt-5">${btn('dl', d.id, 'Скачать (SVG)')}</div></div>`).join('')}</div>` : '<p class="text-gray-500">Дипломы появятся после первого завершённого конкурса.</p>';
+    else body = `<div class="grid gap-4 md:grid-cols-3">${contests.map((c, i) => {
+      const p = parts.find(x => x.contestId === c.id), off = p || c.status !== 'open';
+      const label = p ? (p.status === 'finished' ? `Пройдено: правильных ответов ${p.score} из ${p.maxScore}` : 'Попытка использована') : `${c.taskCount} задач · ${dur(c.durationMin)}`;
+      return `<button data-act="open-contest" data-id="${c.id}" ${off ? 'disabled' : ''} class="group text-left ${box} p-8 min-h-[220px] flex flex-col justify-between transition ${off ? 'opacity-70 cursor-not-allowed' : 'hover:border-zinc-600 hover:-translate-y-0.5'}"><span class="text-6xl font-black ${p ? 'text-gold' : 'text-zinc-700 group-hover:text-gold'} transition">${String(i + 1).padStart(2, '0')}</span><span><span class="block text-2xl font-bold">${esc(c.title)}</span><span class="mt-2 block text-sm ${p ? 'text-gold' : 'text-gray-500'}">${label}</span></span></button>`;
+    }).join('')}</div>`;
+    $('cabinet').innerHTML = head('Личный кабинет', 'Прогресс, участия и дипломы. Один конкурс — одна попытка.')
+      + `<div class="mt-8 ${box} p-6 sm:p-8 grid gap-6 md:grid-cols-[1fr_auto] items-center"><div><p class="text-sm text-gold">Уровень ${pr.level} · ${pr.levelName}</p><p class="mt-2 text-4xl font-black">${pr.xp} <span class="text-xl text-zinc-600">XP</span></p><div class="mt-4 h-2 rounded-full bg-zinc-800 overflow-hidden" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="h-full bg-gold transition-all" style="width:${pct}%"></div></div><p class="mt-2 text-xs text-gray-500">${pr.nextAt ? `До уровня «${pr.nextName}» — ${pr.nextAt - pr.xp} XP` : 'Достигнут максимальный уровень'}</p></div><div class="grid grid-cols-3 gap-3 text-center">${tile(pr.finished + '/' + pr.totalContests, 'конкурсов')}${tile(pr.diplomas, 'дипломов')}${tile(pr.bestPercent + '%', 'лучший результат')}</div></div>`
+      + tabs('cabinet', [['contests', 'Конкурсы'], ['results', 'Мои участия'], ['diplomas', 'Дипломы']], tab) + `<div class="mt-8">${body}</div>`;
+  }
+
+  /* ---------- Админ-панель ---------- */
+  async function renderAdmin(tab) {
+    const my = ++seq;
+    const [st, contests] = await Promise.all([U(api.stats()), U(api.contests.list())]); if (my !== seq) return; cacheC = contests;
+    const cOpts = contests.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join('');
+    let body;
+    if (tab === 'import') body = `<div class="grid gap-4 lg:grid-cols-2"><div class="${box} p-6 space-y-4"><label class="block text-sm text-gray-400">Конкурс<select id="i-contest" class="${field}">${cOpts}</select></label><p class="text-xs text-gray-500">Формат CSV с заголовком: <span class="text-gray-300">email;fullName;school;score</span>. score — число верных ответов среди автопроверяемых задач. Новые ученики создаются автоматически.</p><input id="i-file" type="file" accept=".csv,.txt" class="block w-full text-xs text-gray-400 file:mr-3 file:rounded-lg file:border file:border-zinc-800 file:bg-black file:px-3 file:py-2 file:text-gray-300"><textarea id="i-text" rows="8" spellcheck="false" placeholder="Вставьте CSV или выберите файл" class="${field} font-mono text-xs"></textarea><div class="flex flex-wrap gap-2"><button data-act="i-sample" class="${ghost} !py-2.5 text-sm">Вставить пример</button><button data-act="i-check" class="${ghost} !py-2.5 text-sm">Проверить</button><button id="i-run" data-act="i-run" disabled class="${primary} !py-2.5 text-sm">Импортировать</button></div></div><div id="i-out" class="${box} p-6 text-sm text-gray-400">Здесь появится результат проверки файла.</div></div>`;
+    else if (tab === 'reports') body = `<div class="${box} p-6 grid gap-4 sm:grid-cols-3 items-end"><label class="block text-sm text-gray-400">Отчёт<select id="r-type" class="${field}"><option value="participations">Участия</option><option value="summary">Сводка по конкурсам</option><option value="users">Пользователи</option></select></label><label class="block text-sm text-gray-400">Конкурс<select id="r-contest" class="${field}"><option value="">Все конкурсы</option>${cOpts}</select></label><div class="flex gap-2"><button data-act="r-show" class="${ghost} !py-3 text-sm">Показать</button><button data-act="r-dl" class="${primary} !py-3 text-sm">Скачать CSV</button></div></div><div id="r-out" class="mt-6"></div>`;
+    else body = `<div class="mb-4 flex justify-end"><button data-act="c-new" class="${primary} !py-2.5 text-sm">+ Новый конкурс</button></div>` + table(['Конкурс', 'Статус', 'Участий', ''], contests.map(c => row(`<span class="font-medium">${esc(c.title)}</span><div class="text-xs text-gray-500">${PL.TRACK[c.track]} · ${c.grade} класс · ${c.taskCount} задач · ${dur(c.durationMin)}</div>`, pill(c.status), c.participants, `<div class="flex flex-wrap justify-end gap-1.5">${btn('c-toggle', c.id, c.status === 'open' ? 'Закрыть' : 'Открыть')}${btn('c-edit', c.id, 'Изменить')}${btn('c-del', c.id, 'Удалить')}</div>`)).join(''));
+    $('admin').innerHTML = head('Админ-панель', 'Конкурсы, загрузка списков участников и отчёты.')
+      + `<div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">${tile(st.students, 'учеников')}${tile(st.contests, 'конкурсов')}${tile(st.participations, 'участий')}${tile(st.diplomas, 'дипломов')}</div>`
+      + tabs('admin', [['contests', 'Конкурсы'], ['import', 'Импорт участников'], ['reports', 'Отчёты']], tab) + `<div class="mt-8">${body}</div>`;
+  }
+
+  function contestForm(c) {
+    const v = c || { track: 'phys', grade: 9, durationMin: 120, status: 'draft', title: '', description: '' };
+    openDlg(c ? 'Изменить конкурс' : 'Новый конкурс',
+      `<label class="block text-sm text-gray-400">Название<input name="title" required value="${esc(v.title)}" class="${field}"></label>
+       <div class="grid grid-cols-2 gap-4"><label class="block text-sm text-gray-400">Направление<select name="track" class="${field}">${opts(PL.TRACK, v.track)}</select></label><label class="block text-sm text-gray-400">Статус<select name="status" class="${field}">${opts(PL.STATUS, v.status)}</select></label></div>
+       <label class="block text-sm text-gray-400">Описание<textarea name="description" rows="3" class="${field}">${esc(v.description)}</textarea></label>
+       <div class="grid grid-cols-2 gap-4"><label class="block text-sm text-gray-400">Класс<input name="grade" type="number" min="1" max="11" value="${v.grade}" class="${field}"></label><label class="block text-sm text-gray-400">Длительность, мин<input name="durationMin" type="number" min="10" max="600" value="${v.durationMin}" class="${field}"></label></div>`,
+      async fd => { const b = Object.fromEntries(fd); await U(c ? api.contests.update(c.id, b) : api.contests.create(b)); closeDlg(); toast('Конкурс сохранён'); renderAdmin('contests'); });
+  }
+
+  const SAMPLE = 'email;fullName;school;score\nolga.k@school.ru;Ольга Крылова;Школа №12;3\ndmitry.v@school.ru;Дмитрий Волков;Школа №12;4\nanna@demo.ru;Анна Смирнова;Лицей №7;2\nnew.user@school.ru;;Школа №5;2\nivan.p@school.ru;Иван Петров;Школа №5;99';
+  const importRows = () => PL.csv.parse($('i-text').value).map(r => ({ email: r.email || r.Email || '', fullName: r.fullName || r['ФИО'] || '', school: r.school || r['Школа'] || '', score: r.score ?? r['Баллы'] ?? '' }));
+  async function runImport(dry) {
+    if (!$('i-text').value.trim()) return toast('Сначала вставьте CSV или выберите файл', true);
+    const r = await U(api.participations.import({ contestId: $('i-contest').value, rows: importRows(), dryRun: dry }));
+    $('i-out').innerHTML = `<p class="text-white font-medium">${dry ? 'Проверка файла' : 'Импорт выполнен'}</p><ul class="mt-3 space-y-1"><li>Строк в файле: ${r.total}</li><li>${dry ? 'Будет создано' : 'Создано'} участий: <b class="text-gold">${r.created}</b> (новых учеников: ${r.newUsers})</li><li>Пропущено: ${r.skipped}</li></ul>${r.errors.length ? `<p class="mt-4 text-xs text-gray-500">Замечания:</p><ul class="mt-1 space-y-1 text-xs text-red-300">${r.errors.slice(0, 10).map(e => `<li>Строка ${e.row}: ${esc(e.message)}</li>`).join('')}</ul>` : ''}`;
+    $('i-run').disabled = !dry || !r.created;
+    if (!dry) toast(`Импортировано участий: ${r.created}`);
+  }
+
+  /* ---------- Действия (делегирование событий) ---------- */
+  const ACT = {
+    logout: async () => { await api.auth.logout(); user = null; renderNav(); go('#/'); },
+    reset: () => PL.resetDemo(),
+    'dlg-close': () => closeDlg(),
+    dl: async a => { const r = await U(api.diplomas.get(a.dataset.id)); try { download(`diploma-${r.diploma.number}.pdf`, await diplomaPdfBlob(diplomaSvg(r)), 'application/pdf'); toast('Диплом скачан (PDF)'); } catch (e) { toast(e.message || 'Ошибка создания PDF'); } },
+    'open-contest': a => { cur = cacheC.find(c => c.id === a.dataset.id); openContest(); },
+    'c-new': () => contestForm(),
+    'c-edit': a => contestForm(cacheC.find(c => c.id === a.dataset.id)),
+    'c-toggle': async a => { const c = cacheC.find(x => x.id === a.dataset.id); await U(api.contests.update(c.id, { status: c.status === 'open' ? 'closed' : 'open' })); renderAdmin('contests'); },
+    'c-del': async a => {
+      const c = cacheC.find(x => x.id === a.dataset.id);
+      if (!confirm(`Удалить «${c.title}»?` + (c.participants ? ` Вместе с ним будут удалены участия (${c.participants}) и дипломы.` : ''))) return;
+      await U(api.contests.remove(c.id, { force: 1 })); toast('Конкурс удалён'); renderAdmin('contests');
+    },
+    'i-sample': () => { $('i-text').value = SAMPLE; $('i-run').disabled = true; },
+    'i-check': () => runImport(true),
+    'i-run': () => runImport(false),
+    'r-show': a => report(a), 'r-dl': a => report(a)
+  };
+  async function report(a) {
+    const r = await U(api.reports.get($('r-type').value, { contestId: $('r-contest').value }));
+    if (a.dataset.act === 'r-dl') { download(r.filename, r.content, r.mime); toast(`Файл выгружен, строк: ${r.rows.length}`); }
+    $('r-out').innerHTML = `<p class="mb-3 text-sm text-gray-400">${esc(r.filename)} · строк: ${r.rows.length}${r.rows.length > 8 ? ' (показаны первые 8)' : ''}</p>` + table(r.columns.map(esc), r.rows.slice(0, 8).map(x => row(...x.map(esc))).join(''));
+  }
+  document.addEventListener('click', e => {
+    const o = e.target.closest('[data-open]');
+    if (o) { e.preventDefault(); return user ? go(home()) : openAuth(o.dataset.open === 'account' ? 'login' : o.dataset.open); }
+    if (e.target.closest('[data-home]')) { e.preventDefault(); return go('#/'); }
+    if (e.target.closest('#menu a')) closeMenu();
+    const a = e.target.closest('[data-act]'); if (a && ACT[a.dataset.act]) ACT[a.dataset.act](a, e);
+  });
+  document.addEventListener('change', e => { if (e.target.id === 'i-file' && e.target.files[0]) e.target.files[0].text().then(t => { $('i-text').value = t; $('i-run').disabled = true; }); });
+
+  /* ---------- Диалог ---------- */
+  let dlgSubmit = null;
+  function openDlg(t, fields, fn) {
+    $('dlg-title').textContent = t;
+    $('dlg-form').innerHTML = fields + `<div class="flex gap-3 pt-2"><button type="submit" class="flex-1 ${primary}">Сохранить</button><button type="button" data-act="dlg-close" class="${ghost}">Отмена</button></div>`;
+    dlgSubmit = fn; $('dlg').classList.remove('hidden');
+  }
+  const closeDlg = () => $('dlg').classList.add('hidden');
+  $('dlg-form').addEventListener('submit', e => { e.preventDefault(); dlgSubmit && dlgSubmit(new FormData(e.target)); });
+  const closeModal = () => $('modal').classList.add('hidden');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeAuth(); closeDlg(); } });
+
+  /* ---------- Прохождение конкурса ---------- */
+  let cur = null, part = null, end = 0, tick = null, finished = true;
+  function openContest() {
+    $('m-num').textContent = String(cacheC.indexOf(cur) + 1).padStart(2, '0'); $('m-title').textContent = cur.title; $('m-desc').textContent = cur.description;
+    $('m-rules').innerHTML = [`${cur.taskCount} задач, ответ вводится в строку под условием`, `${dur(cur.durationMin)} на всю работу, таймер запускается сразу`, 'Можно завершить досрочно кнопкой «Завершить»'].map(t => `<li class="rounded-xl border border-zinc-800 px-4 py-3">${t}</li>`).join('') + '<li class="rounded-xl border border-zinc-800 px-4 py-3 text-gold">Попытка одна: пройти конкурс повторно нельзя</li>';
+    $('modal').classList.remove('hidden'); $('m-start').focus();
+  }
+  $('m-close').addEventListener('click', closeModal);
+  $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+  function update() {
+    const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+    $('timer').textContent = fmt(left); $('timer').classList.toggle('text-red-400', left <= 600); $('timer').classList.toggle('text-gold', left > 600);
+    if (left <= 0) finish('time');
+  }
+  $('m-start').addEventListener('click', async () => {
+    closeModal();
+    part = await U(api.participations.start({ contestId: cur.id }));
+    const t = await U(api.contests.tasks(cur.id)); finished = false;
+    $('o-title').textContent = cur.title; $('o-sub').textContent = cur.grade + ' класс';
+    $('o-list').innerHTML = NOTE + t.questions.map((q, i) => `<div class="${box} p-6"><div class="flex gap-5"><span class="text-3xl font-black text-zinc-700 leading-none">${String(i + 1).padStart(2, '0')}</span><div class="flex-1 min-w-0"><p class="text-xs text-gray-500 mb-2">${q.title}</p><p class="leading-relaxed text-gray-200">${q.html}</p><input type="text" autocomplete="off" aria-label="Ответ на задачу ${i + 1}" placeholder="Ваш ответ" class="${field} disabled:opacity-50"></div></div></div>`).join('');
+    if (window.renderMathInElement) renderMathInElement($('o-list'), { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
+    $('olymp').scrollTop = 0; $('olymp').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+    end = Date.now() + t.durationMin * 60000; update(); clearInterval(tick); tick = setInterval(update, 1000);
+  });
+  async function finish(reason) {
+    if (finished) return; finished = true; clearInterval(tick); $('confirm').classList.add('hidden');
+    const inputs = [...$('o-list').querySelectorAll('input')]; inputs.forEach(i => i.disabled = true);
+    const { participation: p, diploma: d } = await U(api.participations.submit(part.id, { answers: inputs.map(i => i.value) }));
+    const q = p.maxScore ? p.score / p.maxScore : 0;
+    $('r-reason').textContent = reason === 'time' ? 'Время вышло: работа сдана автоматически' : 'Работа сдана досрочно';
+    $('r-count').textContent = p.score; $('r-total').textContent = ' / ' + p.maxScore;
+    $('r-status').textContent = q === 1 ? 'все проверяемые задачи решены верно' : q >= .8 ? 'высокий результат' : q >= .5 ? 'средний результат' : 'есть над чем поработать';
+    $('r-time').textContent = `Введено ответов: ${p.answersCount} из ${cur.taskCount} · Затрачено времени: ${fmt(p.spentSec)}`;
+    $('r-diploma').textContent = `Получен документ: ${PL.DEGREE[d.degree]} · № ${d.number}`;
+    $('r-note').textContent = (p.manualPending ? `Ещё ${p.manualPending} задач (доказательства и развёрнутые ответы) проверит жюри вручную. ` : '') + 'Диплом доступен в личном кабинете.';
+    $('result').classList.remove('hidden'); $('r-exit').focus();
+  }
+  $('o-finish').addEventListener('click', () => { if (!finished) $('confirm').classList.remove('hidden'); });
+  $('c-no').addEventListener('click', () => $('confirm').classList.add('hidden'));
+  $('c-yes').addEventListener('click', () => finish('manual'));
+  $('r-exit').addEventListener('click', () => { $('result').classList.add('hidden'); $('olymp').classList.add('hidden'); document.body.style.overflow = ''; go('#/cabinet/results'); });
+
+  /* ---------- Старт ---------- */
+  api.auth.me().then(r => { user = r.data; }).catch(() => {}).then(() => { renderNav(); route(); });
+})(window.PL);
+
+</script>
+</body>
+</html>
